@@ -5,8 +5,10 @@ import React, {
   useImperativeHandle,
   memo,
   useEffect,
+  useState,
 } from 'react';
-import { Platform } from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens'
+import { Dimensions, LayoutChangeEvent, Platform , StyleSheet} from 'react-native';
 import invariant from 'invariant';
 import Animated, {
   useAnimatedReaction,
@@ -85,8 +87,28 @@ Animated.addWhitelistedUIProps({
 
 type BottomSheet = BottomSheetMethods;
 
+const WINDOW_HEIGHT = Dimensions.get('window').height
+
 const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
   function BottomSheet(props, ref) {
+    /**
+     * The following was added by Staffan Kilnes of Alex Therapeutics
+     * in order to display the BottomSheet properly when used inside
+     * a react-navigation native screen with presentation type "modal".
+     */
+     const [didMeasureScreen, setDidMeasureScreen] = useState(false)
+     const [screenOffset, setScreenOffset] = useState<number>(0)
+ 
+     const handleFullWindowOverlayLayout = useCallback((e: LayoutChangeEvent) => {
+       if (didMeasureScreen) return
+ 
+       const fullWindowOverlayHeight = e.nativeEvent.layout.height
+
+       setDidMeasureScreen(true)
+       setScreenOffset(WINDOW_HEIGHT - fullWindowOverlayHeight)
+     }, [screenOffset, didMeasureScreen])
+    /** End edits by Staffan. */
+
     //#region validate props
     usePropsValidator(props);
     //#endregion
@@ -1597,6 +1619,15 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
               detached={detached}
               style={_providedContainerStyle}
             >
+              {/**
+               * The FullWindowOverlay was added by Staffan Kilnes of
+               * Alex Therapeutics in order to allow the BottomSheet
+               * to be displayed on top of a react native Modal.
+               */}
+              <FullWindowOverlay
+                onLayout={handleFullWindowOverlayLayout}
+                style={{...StyleSheet.absoluteFillObject, top: screenOffset }}
+              >
               <Animated.View style={containerStyle}>
                 <BottomSheetBackgroundContainer
                   key="BottomSheetBackgroundContainer"
@@ -1637,6 +1668,7 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
                   handleIndicatorStyle={_providedHandleIndicatorStyle}
                 />
               </Animated.View>
+              </FullWindowOverlay>
               {/* <BottomSheetDebugView
                 values={{
                   // topInset,
