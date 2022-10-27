@@ -7,8 +7,13 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { FullWindowOverlay } from 'react-native-screens'
-import { Dimensions, LayoutChangeEvent, Platform , StyleSheet} from 'react-native';
+import { FullWindowOverlay } from 'react-native-screens';
+import {
+  Dimensions,
+  LayoutChangeEvent,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import invariant from 'invariant';
 import Animated, {
   useAnimatedReaction,
@@ -87,7 +92,7 @@ Animated.addWhitelistedUIProps({
 
 type BottomSheet = BottomSheetMethods;
 
-const WINDOW_HEIGHT = Dimensions.get('window').height
+const WINDOW_HEIGHT = Dimensions.get('window').height;
 
 const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
   function BottomSheet(props, ref) {
@@ -96,17 +101,20 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
      * in order to display the BottomSheet properly when used inside
      * a react-navigation native screen with presentation type "modal".
      */
-     const [didMeasureScreen, setDidMeasureScreen] = useState(false)
-     const [screenOffset, setScreenOffset] = useState<number>(0)
- 
-     const handleFullWindowOverlayLayout = useCallback((e: LayoutChangeEvent) => {
-       if (didMeasureScreen) return
- 
-       const fullWindowOverlayHeight = e.nativeEvent.layout.height
+    const [didMeasureScreen, setDidMeasureScreen] = useState(false);
+    const [screenOffset, setScreenOffset] = useState<number>(0);
 
-       setDidMeasureScreen(true)
-       setScreenOffset(WINDOW_HEIGHT - fullWindowOverlayHeight)
-     }, [screenOffset, didMeasureScreen])
+    const handleFullWindowOverlayLayout = useCallback(
+      (e: LayoutChangeEvent) => {
+        if (didMeasureScreen) return;
+
+        const fullWindowOverlayHeight = e.nativeEvent.layout.height;
+
+        setDidMeasureScreen(true);
+        setScreenOffset(WINDOW_HEIGHT - fullWindowOverlayHeight);
+      },
+      [didMeasureScreen]
+    );
     /** End edits by Staffan. */
 
     //#region validate props
@@ -1624,51 +1632,98 @@ const BottomSheetComponent = forwardRef<BottomSheet, BottomSheetProps>(
                * Alex Therapeutics in order to allow the BottomSheet
                * to be displayed on top of a react native Modal.
                */}
-              <FullWindowOverlay
-                onLayout={handleFullWindowOverlayLayout}
-                style={{...StyleSheet.absoluteFillObject, top: screenOffset }}
-              >
-              <Animated.View style={containerStyle}>
-                <BottomSheetBackgroundContainer
-                  key="BottomSheetBackgroundContainer"
-                  animatedIndex={animatedIndex}
-                  animatedPosition={animatedPosition}
-                  backgroundComponent={backgroundComponent}
-                  backgroundStyle={_providedBackgroundStyle}
-                />
-                <Animated.View
-                  pointerEvents="box-none"
-                  style={contentMaskContainerStyle}
+              {Platform.OS === 'ios' ? (
+                <FullWindowOverlay
+                  onLayout={handleFullWindowOverlayLayout}
+                  style={{
+                    ...StyleSheet.absoluteFillObject,
+                    top: screenOffset,
+                  }}
                 >
-                  <BottomSheetDraggableView
-                    key="BottomSheetRootDraggableView"
-                    style={contentContainerStyle}
-                  >
-                    {typeof Content === 'function' ? <Content /> : Content}
+                  <Animated.View style={containerStyle}>
+                    <BottomSheetBackgroundContainer
+                      key="BottomSheetBackgroundContainer"
+                      animatedIndex={animatedIndex}
+                      animatedPosition={animatedPosition}
+                      backgroundComponent={backgroundComponent}
+                      backgroundStyle={_providedBackgroundStyle}
+                    />
+                    <Animated.View
+                      pointerEvents="box-none"
+                      style={contentMaskContainerStyle}
+                    >
+                      <BottomSheetDraggableView
+                        key="BottomSheetRootDraggableView"
+                        style={contentContainerStyle}
+                      >
+                        {typeof Content === 'function' ? <Content /> : Content}
 
-                    {footerComponent && (
-                      <BottomSheetFooterContainer
-                        footerComponent={footerComponent}
-                      />
-                    )}
-                  </BottomSheetDraggableView>
+                        {footerComponent && (
+                          <BottomSheetFooterContainer
+                            footerComponent={footerComponent}
+                          />
+                        )}
+                      </BottomSheetDraggableView>
+                    </Animated.View>
+                    <BottomSheetHandleContainer
+                      key="BottomSheetHandleContainer"
+                      animatedIndex={animatedIndex}
+                      animatedPosition={animatedPosition}
+                      handleHeight={animatedHandleHeight}
+                      enableHandlePanningGesture={enableHandlePanningGesture}
+                      enableOverDrag={enableOverDrag}
+                      enablePanDownToClose={enablePanDownToClose}
+                      overDragResistanceFactor={overDragResistanceFactor}
+                      keyboardBehavior={keyboardBehavior}
+                      handleComponent={handleComponent}
+                      handleStyle={_providedHandleStyle}
+                      handleIndicatorStyle={_providedHandleIndicatorStyle}
+                    />
+                  </Animated.View>
+                </FullWindowOverlay>
+              ) : (
+                <Animated.View style={containerStyle}>
+                  <BottomSheetBackgroundContainer
+                    key="BottomSheetBackgroundContainer"
+                    animatedIndex={animatedIndex}
+                    animatedPosition={animatedPosition}
+                    backgroundComponent={backgroundComponent}
+                    backgroundStyle={_providedBackgroundStyle}
+                  />
+                  <Animated.View
+                    pointerEvents="box-none"
+                    style={contentMaskContainerStyle}
+                  >
+                    <BottomSheetDraggableView
+                      key="BottomSheetRootDraggableView"
+                      style={contentContainerStyle}
+                    >
+                      {typeof Content === 'function' ? <Content /> : Content}
+
+                      {footerComponent && (
+                        <BottomSheetFooterContainer
+                          footerComponent={footerComponent}
+                        />
+                      )}
+                    </BottomSheetDraggableView>
+                  </Animated.View>
+                  <BottomSheetHandleContainer
+                    key="BottomSheetHandleContainer"
+                    animatedIndex={animatedIndex}
+                    animatedPosition={animatedPosition}
+                    handleHeight={animatedHandleHeight}
+                    enableHandlePanningGesture={enableHandlePanningGesture}
+                    enableOverDrag={enableOverDrag}
+                    enablePanDownToClose={enablePanDownToClose}
+                    overDragResistanceFactor={overDragResistanceFactor}
+                    keyboardBehavior={keyboardBehavior}
+                    handleComponent={handleComponent}
+                    handleStyle={_providedHandleStyle}
+                    handleIndicatorStyle={_providedHandleIndicatorStyle}
+                  />
                 </Animated.View>
-                <BottomSheetHandleContainer
-                  key="BottomSheetHandleContainer"
-                  animatedIndex={animatedIndex}
-                  animatedPosition={animatedPosition}
-                  handleHeight={animatedHandleHeight}
-                  enableHandlePanningGesture={enableHandlePanningGesture}
-                  enableOverDrag={enableOverDrag}
-                  enablePanDownToClose={enablePanDownToClose}
-                  overDragResistanceFactor={overDragResistanceFactor}
-                  keyboardBehavior={keyboardBehavior}
-                  handleComponent={handleComponent}
-                  handleStyle={_providedHandleStyle}
-                  handleIndicatorStyle={_providedHandleIndicatorStyle}
-                />
-              </Animated.View>
-              </FullWindowOverlay>
+              )}
+
               {/* <BottomSheetDebugView
                 values={{
                   // topInset,
